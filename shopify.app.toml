@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "a4a6e5538c4d0c2bba702a869cdaf91e"
-application_url = "https://example.com"
+application_url = "https://generate-token-aof1.onrender.com"
 embedded = true
 name = "generate-admin-api"
 
@@ -45,7 +45,7 @@ api_version = "2026-07"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://generate-token-aof1.onrender.com/api/auth" ]
 
 [build]
 include_config_on_deploy = true

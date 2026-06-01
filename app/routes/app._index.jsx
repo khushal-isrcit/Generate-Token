@@ -70,7 +70,16 @@ export default function Index() {
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const formRef = useRef(null);
-  const [adminScopes, setAdminScopes] = useState([]);
+  const [adminScopes, setAdminScopes] = useState([
+    "read_files",
+    "read_metaobject_definitions",
+    "write_content",
+    "write_customers",
+    "write_files",
+    "write_metaobject_definitions",
+    "write_orders",
+    "write_products",
+  ]);
   const [storefrontScopes, setStorefrontScopes] = useState([]);
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
