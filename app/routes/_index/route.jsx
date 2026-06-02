@@ -1,22 +1,12 @@
-/* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types, no-undef */
 import { redirect, Form, useLoaderData } from "react-router";
 import { login } from "../../shopify.server";
 import {
   ADMIN_SCOPE_OPTIONS,
   STOREFRONT_SCOPE_OPTIONS,
+  parseScopes,
 } from "../../lib/token-scopes";
 import styles from "./styles.module.css";
-
-const DEFAULT_SCOPES = new Set([
-  "read_files",
-  "read_metaobject_definitions",
-  "write_content",
-  "write_customers",
-  "write_files",
-  "write_metaobject_definitions",
-  "write_orders",
-  "write_products",
-]);
 
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
@@ -25,11 +15,15 @@ export const loader = async ({ request }) => {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  return { showForm: Boolean(login) };
+  return {
+    configuredScopes: parseScopes(process.env.SCOPES),
+    showForm: Boolean(login),
+  };
 };
 
 export default function App() {
-  const { showForm } = useLoaderData();
+  const { configuredScopes, showForm } = useLoaderData();
+  const defaultScopes = new Set(configuredScopes);
   const adminRows = buildScopeRows(ADMIN_SCOPE_OPTIONS, "Admin API");
   const storefrontRows = buildScopeRows(
     STOREFRONT_SCOPE_OPTIONS,
@@ -39,16 +33,18 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>Choose API access before install</h1>
-        <p className={styles.text}>
-          Select the scopes you want, install the app, and the embedded app
-          will only show the access token.
-        </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">
             <div className={styles.installPanel}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <p className={styles.kicker}>Easy Api Token</p>
+                  <h2 className={styles.panelTitle}>Connect a Shopify store</h2>
+                </div>
+              </div>
+
               <label className={styles.label}>
-                <span>Shop domain</span>
+                <span className={styles.fieldLabel}>Shop domain</span>
                 <input
                   className={styles.input}
                   type="text"
@@ -56,20 +52,35 @@ export default function App() {
                   placeholder="store-name.myshopify.com"
                   required
                 />
-                <span>e.g: my-shop-domain.myshopify.com</span>
+                <span className={styles.fieldHint}>
+                  Example: `my-shop-domain.myshopify.com`
+                </span>
               </label>
 
               <div className={styles.scopeLayout}>
-                <ScopeSection rows={adminRows} title="Admin API scopes" />
                 <ScopeSection
+                  defaultScopes={defaultScopes}
+                  rows={adminRows}
+                  title="Admin API scopes"
+                  tone="admin"
+                />
+                <ScopeSection
+                  defaultScopes={defaultScopes}
                   rows={storefrontRows}
+                  tone="storefront"
                   title="Storefront API scopes"
                 />
               </div>
 
-              <button className={styles.button} type="submit">
-                Install app
-              </button>
+              <div className={styles.actionRow}>
+                <p className={styles.actionNote}>
+                  Required scopes from app config are always included. Your
+                  selections control the optional scope request after install.
+                </p>
+                <button className={styles.button} type="submit">
+                  Install app
+                </button>
+              </div>
             </div>
           </Form>
         )}
@@ -78,28 +89,45 @@ export default function App() {
   );
 }
 
-function ScopeSection({ title, rows }) {
+function ScopeSection({ defaultScopes, title, rows, tone }) {
   return (
     <section className={styles.scopeSection}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+      <div className={styles.sectionHeader}>
+        <div>
+          <h2 className={styles.sectionTitle}>{title}</h2>
+          <p className={styles.sectionText}>
+            {tone === "admin"
+              ? "Merchant and back-office permissions used by the Admin API."
+              : "Unauthenticated storefront permissions used by headless and storefront clients."}
+          </p>
+        </div>
+        <span
+          className={`${styles.sectionBadge} ${
+            tone === "admin" ? styles.adminBadge : styles.storefrontBadge
+          }`}
+        >
+          {rows.length} groups
+        </span>
+      </div>
       <div className={styles.scopeList}>
         {rows.map((row) => (
           <div className={styles.scopeItem} key={row.key}>
             <input
+              className={styles.checkbox}
               id={row.key}
-              defaultChecked={row.scopes.every((scope) => DEFAULT_SCOPES.has(scope))}
+              defaultChecked={row.scopes.every((scope) =>
+                defaultScopes.has(scope),
+              )}
               name="scopes"
               type="checkbox"
               value={row.scopes.join(",")}
             />
-            <div>
-              <label className={styles.scopeLabel} htmlFor={row.key}>
-                {row.label}
-              </label>
-              <div className={styles.scopeMeta}>
+            <label className={styles.scopeContent} htmlFor={row.key}>
+              <span className={styles.scopeLabel}>{row.label}</span>
+              <span className={styles.scopeMeta}>
                 {row.api} • {row.scopes.join(", ")}
-              </div>
-            </div>
+              </span>
+            </label>
           </div>
         ))}
       </div>

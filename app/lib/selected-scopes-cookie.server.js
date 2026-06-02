@@ -4,7 +4,8 @@ export const selectedScopesCookie = createCookie("selected_scopes", {
   httpOnly: true,
   maxAge: 60 * 10,
   path: "/",
-  sameSite: "lax",
+  sameSite: "none",
+  secure: true,
 });
 
 export async function readSelectedScopes(request) {
