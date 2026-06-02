@@ -1,6 +1,10 @@
 import { LoginErrorType } from "@shopify/shopify-app-react-router/server";
 
 export function loginErrorMessage(loginErrors) {
+  if (loginErrors?.shop === "INVALID_MYSHOPIFY_DOMAIN") {
+    return { shop: "Enter a valid shop like store-name.myshopify.com" };
+  }
+
   if (loginErrors?.shop === LoginErrorType.MissingShop) {
     return { shop: "Please enter your shop domain to log in" };
   } else if (loginErrors?.shop === LoginErrorType.InvalidShop) {
